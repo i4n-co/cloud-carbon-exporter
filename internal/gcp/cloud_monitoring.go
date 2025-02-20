@@ -49,7 +49,7 @@ func (service *monitoringService) query(ctx context.Context, promql string, reso
 		return nil, fmt.Errorf("failed to send promql query range request (%s): %w", promql, err)
 	}
 
-	queryResponse := new(promQueryResponse)
+	queryResponse := new(PromQueryResponse)
 	if err := mapstructure.Decode(body.Data, queryResponse); err != nil {
 		return nil, err
 	}
@@ -64,7 +64,7 @@ func (service *monitoringService) query(ctx context.Context, promql string, reso
 			continue
 		}
 
-		_, value := result.valueAt(result.len() - 1)
+		_, value := result.ValueAt(result.len() - 1)
 		metrics[i] = cloudcarbonexporter.Metric{
 			Labels:     result.Metric,
 			Value:      value,
@@ -75,25 +75,25 @@ func (service *monitoringService) query(ctx context.Context, promql string, reso
 	return metrics, nil
 }
 
-// promQueryResponse represents the query response of the managed prometheus api
-type promQueryResponse struct {
-	Result     []promQueryResponseResult `json:"result"`
+// PromQueryResponse represents the query response of the managed prometheus api
+type PromQueryResponse struct {
+	Result     []PromQueryResponseResult `json:"result"`
 	ResultType string                    `json:"resultType"`
 }
 
-// promQueryResponseResult olds metric labels and timestamped values
-type promQueryResponseResult struct {
+// PromQueryResponseResult olds metric labels and timestamped values
+type PromQueryResponseResult struct {
 	Metric map[string]string `json:"metric"`
 	Values [][]any           `json:"values"`
 }
 
 // len of the prometheus response
-func (r *promQueryResponseResult) len() int {
+func (r *PromQueryResponseResult) len() int {
 	return len(r.Values)
 }
 
-// valueAt returns the timestamp and the value located at index
-func (r *promQueryResponseResult) valueAt(index int) (unixTimestamp float64, value float64) {
+// ValueAt returns the timestamp and the value located at index
+func (r *PromQueryResponseResult) ValueAt(index int) (unixTimestamp float64, value float64) {
 	must.Assert(index >= 0 && index < r.len(), fmt.Sprintf("invalid index value %d, result len=%d", index, r.len()))
 	must.Assert(len(r.Values[index]) == 2, "response result item must have 2 data: timestamp and float")
 
